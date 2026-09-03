@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Manager"
+  short_description: "Classify and register locally installed Codex skills"
+  default_prompt: "Use $skill-manager to install and optionally classify this skill."
