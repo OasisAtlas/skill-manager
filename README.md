@@ -1,84 +1,83 @@
-# Skill Manager for Codex
+# skill-manager
 
-English | [中文](#中文简介)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-`skill-manager` is a Codex skill for installing, inventorying, and optionally classifying local skills without renaming or modifying their canonical packages.
+`skill-manager` 是 Codex 的 Skill 安装入口与分类管理器。它会在下载任何目标 Skill 前，先简要说明该 Skill 的主要功能、流程和关键边界，再要求用户明确选择已有类目、新建类目或不分类。
 
-## What it does
+## 为什么需要完整初始化
 
-- Keeps each installed skill's original folder and `SKILL.md` name.
-- Stores category metadata separately in `~/.codex/skill-manager/catalog.json`.
-- Creates optional, explicit-only category aliases such as `$presentation-slide-maker`.
-- Requires a category decision before every installation: use an existing category, create one, or remain unclassified.
-- Refuses to overwrite unrelated aliases or silently reclassify existing skills.
+单独安装 `SKILL.md` 只能让 Codex 在语义匹配时调用 `skill-manager`，不能保证所有“安装 Skill”请求都先经过它。完整初始化会额外向全局 `~/.codex/AGENTS.md` 写入一条受标记管理的默认路由规则，因此这是推荐安装方式。
 
-## Workflow
+## 安装
 
-Inspect the source skill → summarize its capability and workflow → ask for a category decision → install through `skill-installer` → record the classification → optionally create a prefixed alias.
-
-## Installation
-
-Copy or clone this repository to your Codex skills directory:
+先克隆仓库，然后运行交互式安装器：
 
 ```bash
-git clone https://github.com/OasisAtlas/skill-manager.git ~/.codex/skills/skill-manager
+git clone https://github.com/OasisAtlas/skill-manager.git
+cd skill-manager
+python3 scripts/install.py
 ```
 
-Restart Codex or begin a new conversation, then invoke:
+安装器会提示：
 
 ```text
-$skill-manager
+1. 完整初始化安装（推荐）：安装 Skill，并设置为所有 Skill 安装请求的默认入口
+2. 仅安装 Skill：不修改全局 AGENTS.md
+3. 取消
 ```
 
-## Catalog commands
+回车默认选择完整初始化。也可用于自动化：
 
-Run these commands from the repository root:
+```bash
+python3 scripts/install.py --mode full
+python3 scripts/install.py --mode skill-only
+```
+
+安装完成后请新开一个 Codex 任务，使 Skill 和全局规则稳定生效。更多细节见 [安装说明](docs/installation.md)。
+
+## 默认安装流程
+
+检查来源 → 简述对象 Skill 的能力与流程 → 读取已有类目 → 要求用户确认分类 → 调用官方 `skill-installer` 下载 → 记录分类 → 按需创建类目前缀别名。
+
+分类始终可选，但分类决策不可跳过：
+
+- 一个类目明显匹配：仍需确认是否进入该类目。
+- 多个类目匹配：询问进入哪个。
+- 没有匹配：询问新建类目或保持未分类。
+- 用户可以随时选择不分类，也可以拒绝创建前缀别名。
+
+## 分类模型
+
+- 上游 Skill 的目录、名称和内容保持不变。
+- 分类数据独立保存在 `~/.codex/skill-manager/catalog.json`。
+- 一个 Skill 最多有一个主类目，也可以长期保持未分类。
+- `$ppt-slide-maker` 一类前缀名称是显式调用别名，不是上游 Skill 的副本。
+
+## 常用命令
 
 ```bash
 python3 scripts/catalog.py inventory
 python3 scripts/catalog.py list-categories
-python3 scripts/catalog.py add-category --id presentation --label "Presentations" --description "Slides and presentation design"
-python3 scripts/catalog.py classify --skill slide-maker --category presentation --source https://github.com/example/repo --create-alias
-python3 scripts/catalog.py record-unclassified --skill some-skill --source https://github.com/example/repo
+python3 scripts/catalog.py add-category --id presentation --label "演示文稿" --description "PPT、幻灯片与演示设计"
+python3 scripts/catalog.py classify --skill slide-maker --category presentation --create-alias
+python3 scripts/catalog.py record-unclassified --skill some-skill
 python3 scripts/catalog.py unclassify --skill slide-maker --remove-alias
+python3 scripts/verify_install.py
 ```
 
-The helper uses only the Python standard library. It supports `--codex-home` for testing or managing another Codex installation.
+## 项目文档
 
-## Important boundary
+- [安装与升级](docs/installation.md)
+- [工作原理](docs/architecture.md)
+- [行为规范](docs/behavior-spec.md)
+- [数据与安全边界](docs/security.md)
+- [参与开发](CONTRIBUTING.md)
+- [版本记录](CHANGELOG.md)
 
-This skill manages classification around the existing `skill-installer`; it does not replace its download or authentication behavior. Category aliases are thin wrappers, not copies of upstream skills.
+## 兼容边界
 
-## 中文简介
+`skill-manager` 负责安装前说明、分类决策和安装后登记；真正的下载、认证与来源处理仍交给 Codex 自带的 `skill-installer`。项目仅使用 Python 标准库。
 
-`skill-manager` 是一个面向 Codex 的本地 Skill 管理技能，用于安装、盘点和可选分类，同时保留每个上游 Skill 的原始目录、名称与内容。
+## License
 
-## 主要能力
-
-- 保留已安装 Skill 的原始目录和 `SKILL.md` 名称。
-- 将分类信息独立存放在 `~/.codex/skill-manager/catalog.json`，避免升级覆盖。
-- 可创建 `$presentation-slide-maker` 这类仅供显式调用的类目前缀别名。
-- 每次安装前必须由用户决定：使用已有类目、新建类目，或保持未分类。
-- 遇到无关别名冲突或已有分类时会安全拒绝，不静默覆盖。
-
-## 工作流程
-
-检查来源 Skill → 简述主要能力与流程 → 请求用户确认分类 → 通过 `skill-installer` 安装 → 记录分类 → 按需创建前缀别名。
-
-## 安装方式
-
-将仓库克隆到 Codex Skills 目录：
-
-```bash
-git clone https://github.com/OasisAtlas/skill-manager.git ~/.codex/skills/skill-manager
-```
-
-重启 Codex 或开始新对话后，使用以下方式调用：
-
-```text
-$skill-manager
-```
-
-## 重要边界
-
-本 Skill 是现有 `skill-installer` 外围的分类与决策层，不替代其下载和认证机制。类目前缀别名只是指向正本的薄包装，不会复制或改名上游 Skill。
+本项目采用 [MIT License](LICENSE) 开源，可自由使用、修改和分发，但需保留版权与许可声明。

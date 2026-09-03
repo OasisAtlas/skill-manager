@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-description: Install, inventory, and optionally classify local Codex skills while preserving each upstream skill's canonical name and source. Before every installation, briefly explain the target skill's main capability and workflow, then obtain an explicit category decision. Use when installing many skills, organizing the local skill library, defining categories, creating category-prefixed call aliases, or reviewing unclassified skills. Do not activate for ordinary use of an already installed skill.
+description: Default entry point for every request to install, add, download, or import a local Codex skill; explicit invocation is not required. Briefly explain the target skill's main capability and workflow, obtain an explicit category decision, then delegate the actual download to skill-installer while preserving the upstream name and source. Also use for inventory, category management, prefixed call aliases, and unclassified-skill review. Do not activate for ordinary use of an already installed skill.
 metadata:
   short-description: Organize and classify installed skills
 ---
@@ -8,6 +8,13 @@ metadata:
 # Skill Manager
 
 Manage classification around the existing `skill-installer`; do not replace its download and authentication behavior.
+
+## Default routing
+
+- Automatically start this workflow whenever the user asks to install, add, download, or import a Codex Skill. The user does not need to mention `$skill-manager`.
+- Treat `skill-manager` as the primary workflow and `skill-installer` as its subordinate download mechanism. Do not route an installation directly to `skill-installer`, including when the user mentions that installer as the intended mechanism.
+- A request that only lists available Skills may use `skill-installer` to retrieve the list. As soon as the user selects anything for installation, enter this workflow before downloading it.
+- Creating or editing a Skill with `skill-creator` is not an installation request unless the user also asks to install an external package.
 
 ## Storage model
 
