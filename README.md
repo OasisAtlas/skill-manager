@@ -82,4 +82,3 @@ $skill-manager
 ## 重要边界
 
 本 Skill 是现有 `skill-installer` 外围的分类与决策层，不替代其下载和认证机制。类目前缀别名只是指向正本的薄包装，不会复制或改名上游 Skill。
-
